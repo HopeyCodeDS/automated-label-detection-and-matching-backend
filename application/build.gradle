@@ -1,0 +1,9 @@
+plugins {
+    id 'module-config'
+    id 'spring-conventions'
+}
+
+dependencies {
+    implementation project(":common")
+    implementation project(':MatcherContext')
+}
