@@ -1,3 +1,10 @@
 plugins {
     id 'module-config'
 }
+
+// Ensure common is a plain library
+apply plugin: 'java-library'
+
+// Disable bootJar since this is not a Spring Boot module
+tasks.named("bootJar").configure { enabled = false }
+tasks.named("jar").configure { enabled = true }

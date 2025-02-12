@@ -6,4 +6,10 @@ plugins {
 dependencies {
     implementation project(":common")
     implementation project(':MatcherContext')
+
+    implementation 'org.openpnp:opencv:4.9.0-0'
+}
+
+tasks.named('bootRun') {
+    systemProperty "java.library.path", "C:\\opencv\\nativeLibs"
 }
