@@ -1,0 +1,33 @@
+### Upload an image for OCR processing
+POST http://localhost:8080/api/ocr
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="DSCN5878.jpg"
+Content-Type: image/jpeg
+
+< ./src/main/resources/img/DSCN5878.jpg
+--WebAppBoundary--
+
+
+### Upload another image for OCR processing
+POST http://localhost:8080/api/ocr
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="another_image.jpg"
+Content-Type: image/jpeg
+
+< ./src/main/resources/img/another_image.jpg
+--WebAppBoundary--
+
+### Upload an invalid file (not an image)
+POST http://localhost:8080/api/ocr
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="invalid_file.txt"
+Content-Type: text/plain
+
+< ./src/main/resources/img/invalid_file.txt
+--WebAppBoundary--
