@@ -2,7 +2,6 @@ package be.kdg.prog6.MatcherContext.core;
 
 
 import be.kdg.prog6.MatcherContext.adapters.out.OrderlineRepository;
-import be.kdg.prog6.MatcherContext.domain.MatchedOrderline;
 import be.kdg.prog6.MatcherContext.domain.OcrResult;
 import be.kdg.prog6.MatcherContext.domain.Orderline;
 import org.slf4j.Logger;
@@ -24,39 +23,31 @@ public class OrderlineMatchingService {
     public List<Orderline> findMatchingOrderlines(OcrResult ocrResult) {
         List<Orderline> matches = new ArrayList<>();
 
-        // Extract potential ordernumbers from the OCR result
-        List<String> potentialOrdernumbers = extractPotentialOrdernumbers(ocrResult);
+        for (String text : ocrResult.extractedText()) {
+            logger.info("Processing extracted text: " + text);
 
-        for (String ordernumber : potentialOrdernumbers) {
-            List<Orderline> filteredOrderlines = orderlineRepository.findByOrdernumberEdi(ordernumber);
+            // Exact Match on ordernummer Edi
+            List<Orderline> byOrdernumberEdi = orderlineRepository.findByOrdernummerEdi(text);
+            if (!byOrdernumberEdi.isEmpty()) {
+                logger.info("Matched by ordernummerEdi: {}", byOrdernumberEdi);
+                matches.addAll(byOrdernumberEdi);
+            }
 
-            for (Orderline orderline : filteredOrderlines) {
-                if (matches.contains(orderline)) {
-                    continue;
-                }
+            // Fuzzy match on other fields like product code, batch number, etc.
+            List<Orderline> byProductcode = orderlineRepository.findByProductCode(text);
+            if (!byProductcode.isEmpty()) {
+                logger.info("Matched by product code: {}", byProductcode);
+                matches.addAll(byProductcode);
+            }
 
-                // Check if any extracted text matches the product code, batch number, or product description
-                for (String text : ocrResult.extractedText()){
-                    if (text.equals(orderline.getProductCode()) ||
-                            text.equals(orderline.getBatchNumber()) ||
-                            text.equals(orderline.getProductDescription())){
-                        matches.add(orderline);
-                        break;
-                    }
-                }
+            List<Orderline> byBatchnumber = orderlineRepository.findByBatch(text);
+            if (!byBatchnumber.isEmpty()) {
+                logger.info("Matched by batch number: {}", byBatchnumber);
+                matches.addAll(byBatchnumber);
             }
         }
 
         return matches;
     }
 
-    private List<String> extractPotentialOrdernumbers(OcrResult ocrResult) {
-        List<String> potentialOrdernumbers = new ArrayList<>();
-        for (String text : ocrResult.extractedText()) {
-            if (text.matches("^[0-9]+$")) { // Assuming ordernumbers are numeric
-                potentialOrdernumbers.add(text);
-            }
-        }
-        return potentialOrdernumbers;
-    }
 }
