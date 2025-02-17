@@ -3,10 +3,10 @@ POST http://localhost:8080/api/ocr
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="DSCN5878.jpg"
+Content-Disposition: form-data; name="file"; filename="UCB_2.JPG"
 Content-Type: image/jpeg
 
-< ./src/main/resources/img/DSCN5878.jpg
+< ./src/main/resources/img/UCB_2.JPG
 --WebAppBoundary--
 
 
@@ -15,10 +15,10 @@ POST http://localhost:8080/api/ocr
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="another_image.jpg"
+Content-Disposition: form-data; name="file"; filename="testPic.jpg"
 Content-Type: image/jpeg
 
-< ./src/main/resources/img/another_image.jpg
+< ./src/main/resources/img/testPic.jpg
 --WebAppBoundary--
 
 ### Upload an invalid file (not an image)
