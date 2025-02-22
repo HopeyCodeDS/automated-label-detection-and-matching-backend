@@ -7,3 +7,14 @@ server:
 spring:
   config:
     additional-location: ${SPRING_CONFIG_ADDITIONAL_LOCATION}
+    datasource:
+        url: jdbc:mysql://localhost:3306/app_db
+        username: user
+        password: password
+        driver-class-name: com.mysql.cj.jdbc.Driver
+
+    jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        hibernate:
+          ddl-auto: update  # Can be 'create', 'update', 'validate', or 'none'
+        show-sql: true  # To log SQL queries in the console
