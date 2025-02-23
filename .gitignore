@@ -6,7 +6,6 @@ build/
 .idea/
 *.iml
 *.iws
-out/
 
 # Logs
 *.log

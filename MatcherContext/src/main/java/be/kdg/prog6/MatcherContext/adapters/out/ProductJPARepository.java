@@ -1,0 +1,8 @@
+package be.kdg.prog6.MatcherContext.adapters.out;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface ProductJPARepository extends JpaRepository<ProductJPAEntity, Long> {
+    List<ProductJPAEntity> findByOrderNumberEdi(String orderNumber);
+}

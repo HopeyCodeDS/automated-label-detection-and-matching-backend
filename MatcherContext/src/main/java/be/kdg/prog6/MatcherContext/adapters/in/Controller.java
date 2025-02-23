@@ -23,35 +23,45 @@ public class Controller {
         this.productMatchingUseCaseImpl = productMatchingUseCaseImpl;
     }
 
-    @PostMapping("/extract-text")
+    @PostMapping(value = "/extract-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> extractText(
             @RequestParam("file") MultipartFile file,
             @RequestParam("orderNumber") String orderNumber
     ) {
         try {
+            if (file.isEmpty()) {
+                throw new IllegalArgumentException("Uploaded file is empty");
+            }
+
+            System.out.println("Received file: " + file.getOriginalFilename());
+            System.out.println("Received order number: " + orderNumber);
+
             // Create headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-            // Use MultiValueMap for multipart request
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", new ByteArrayResource(file.getBytes()) {
+            // Convert image to byte array
+            ByteArrayResource imageResource = new ByteArrayResource(file.getBytes()) {
                 @Override
                 public String getFilename() {
                     return file.getOriginalFilename();
                 }
-            });
+            };
+
+            // Prepare request body for Python OCR API
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", imageResource);
             body.add("orderNumber", orderNumber);
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            // Send the request to Python OCR API
+            // Call Python OCR API
             ResponseEntity<Map> response = restTemplate.exchange(PYTHON_OCR_API, HttpMethod.POST, requestEntity, Map.class);
 
-            // Extract text from response
+            // Extract OCR text from response
             List<String> extractedText = (List<String>) response.getBody().get("text");
 
-            // Find best matching product for the given order number
+            // Find best matching product
             Optional<ProductMatchResult> matchedProduct = productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber, extractedText);
 
             Map<String, Object> result = new HashMap<>();
