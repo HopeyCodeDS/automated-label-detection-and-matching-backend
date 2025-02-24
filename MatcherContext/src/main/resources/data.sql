@@ -77,4 +77,29 @@ INSERT INTO products (
       ('LE', '0227499083', '9097380597', '2025-02-05', '(G01P) FELLING PRODUCTION',
        22, '2244354014', '000010', '0', 'INTERBOND 201 KDL274/20L/EU',
        NULL, '5511266', 'INTERBOND 201 KDL274/20L/EU', '5511266',
-       'FZ', 'EUR', NULL);
+       'FZ', 'EUR', NULL),
+      (
+          'UCB Pharma S.A.', '0180292793', NULL, '2025-02-21', 'UCB Pharma S.A.', 1920,
+          '297429', '1', 'Available', 'Keppra DG 500MG 60TAB IT', '51-4766-65', '82690530',
+          'Warehouse temp: 15-25C', NULL, 'Uncontrolled', 'N/A', 'N/A'
+      ),
+      (
+          'Unknown Supplier', '0180292793', NULL, '2025-02-21', '', 10,
+          '21C05/V14123', '1', 'Available', 'Ethanolum 96% denaturatus', '2 X 5L', '3950-227',
+          'EX: 01-2024', NULL, 'Denatured Ethanol', 'N/A', 'N/A'
+      ),
+      (
+          'KaroPharma GmbH', '0180292793', NULL, '2025-02-21', 'KaroPharma GmbH', 24,
+          '1002123', '1', 'Available', 'Multi-Gyn FloraPlus DE/AT', '5 ml', '1002123',
+          'Exp date: 2025-11', NULL, '24 units (each 5 monodoses of 5 ml)', 'N/A', 'N/A'
+      ),
+      (
+          'Xiameter', '0180292793', NULL, '2025-02-21', 'Xiameter', 1000,
+          '0008789539', '1', 'Available', 'APW-4248 Powdered Antifoam', '15 Containers', '0008789539',
+          'EXP: 04-AUG-2017', NULL, 'Powdered Antifoam', 'N/A', 'N/A'
+      ),
+      (
+          'Perstorp Chemicals', '0180292793', NULL, '2025-02-21', 'Perstorp Chemicals', 210,
+          '2EHA24003', '1', 'Available', '2-Ethylhexanoic Acid', 'Approx 228 KG', '2EHA24003',
+          'Net: 210 KG', NULL, 'Chemical Drum', 'N/A', 'N/A'
+      );
