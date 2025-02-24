@@ -26,7 +26,16 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
     @Override
     public Optional<ProductMatchResult> findBestMatchingProduct(String orderNumber, List<String> extractedText) {
         logger.info("Starting product match for orderNumber: {}", orderNumber);
-        List<Product> products = extractProductsPort.extractByOrderNumber(orderNumber);
+
+        List<Product> products;
+
+        // If orderNumber is null or empty, extract all products from DB
+        if (orderNumber == null || orderNumber.trim().isEmpty()) {
+            logger.info("Order number is null or empty. Loading all products from database.");
+            products = extractProductsPort.extractAll();
+        } else {
+            products = extractProductsPort.extractByOrderNumber(orderNumber);
+        }
 
         if (products.isEmpty()) {
             logger.warn("No products found for orderNumber: {}", orderNumber);
@@ -78,7 +87,8 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
             weightedAccuracy += descriptionAccuracy * descriptionWeight;
 
             // Compare Order Date
-            double orderDateAccuracy = compareField(product.getOrderDate().toString(), words);
+            String orderDateStr = (product.getOrderDate() != null) ? product.getOrderDate().toString() : "";
+            double orderDateAccuracy = compareField(orderDateStr, words);
             weightedAccuracy += orderDateAccuracy * orderDateWeight;
 
             logger.info("\nFinal Weighted Accuracy for product {}: {}%\n", product.getProductCode(), String.format("%.2f", weightedAccuracy * 100));

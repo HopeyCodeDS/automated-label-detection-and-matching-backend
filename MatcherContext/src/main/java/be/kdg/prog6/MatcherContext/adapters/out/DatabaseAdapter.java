@@ -30,4 +30,17 @@ public class DatabaseAdapter implements ExtractProductsPort {
         return products;
 
     }
+
+    @Override
+    public List<Product> extractAll() {
+        List<ProductJPAEntity> productJPAEntities = productJPARepository.findAll();
+        List<Product> products= new ArrayList<>();
+
+        for (ProductJPAEntity productJPAEntity: productJPAEntities){
+            Product product= new Product();
+            product.initialiseProduct(productJPAEntity.getClient(),productJPAEntity.getOrderNumberEdi(),productJPAEntity.getRefoEdi(),productJPAEntity.getOrderDate(),productJPAEntity.getCustomerName(),productJPAEntity.getQuantityOrdered(),productJPAEntity.getBatch(),productJPAEntity.getLine(),productJPAEntity.getStockInventory(),productJPAEntity.getDescription1(),productJPAEntity.getPackCode(),productJPAEntity.getProductCode(),productJPAEntity.getDescription2(),productJPAEntity.getProductExtension(),productJPAEntity.getDescriptionPackaging(),productJPAEntity.getPalletSize(),productJPAEntity.getSalesCode());
+            products.add(product);
+
+        }
+        return products;    }
 }

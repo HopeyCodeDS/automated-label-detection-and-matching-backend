@@ -8,5 +8,7 @@ import java.util.List;
 @Service
 public interface ExtractProductsPort {
     List<Product> extractByOrderNumber(String orderNumber);
+    List<Product> extractAll();
+
 
 }
