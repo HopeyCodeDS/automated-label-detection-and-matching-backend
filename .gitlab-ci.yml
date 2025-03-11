@@ -26,38 +26,38 @@ build_backend:
     paths:
       - ovf_image_tag.txt
 
-deploy_backend:
-  stage: deploy
-  image: banditgames11.azurecr.io/banditgames-deployer:latest
-  dependencies:
-    - build_backend
+# deploy_backend:
+#   stage: deploy
+#   image: banditgames11.azurecr.io/banditgames-deployer:latest
+#   dependencies:
+#     - build_backend
     
-  script:
-    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    - az acr login --name ovfacr
-    - az upgrade --yes
-    - az extension add --name containerapp
-    - app_exists=$(az containerapp list --resource-group ovflab --query "[?name=='backend']" -o tsv)
-    - echo $app_exists
-    - IMAGE_TAG=$(cat ovf_image_tag.txt)
-    - |
-      if [ -n "$app_exists" ]; then
-        echo "Container App 'backend' found. Updating..."
-        az containerapp update \
-          --resource-group ovflab \
-          --name backend \
-          --min-replicas 1 \
-          --image $IMAGE_TAG \
-          --debug
-      else
-        echo "Container App 'backend' not found. Creating..."
-        az containerapp create \
-          --resource-group ovflab \
-          --name backend \
-          --environment ovflab \
-          --image $IMAGE_TAG \
-          --min-replicas 1 \
-          --ingress external \
-          --target-port 8080
-      fi
-    - az containerapp show --name backend --resource-group ovflab --output table
+#   script:
+#     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+#     - az acr login --name ovfacr
+#     - az upgrade --yes
+#     - az extension add --name containerapp
+#     - app_exists=$(az containerapp list --resource-group ovflab --query "[?name=='backend']" -o tsv)
+#     - echo $app_exists
+#     - IMAGE_TAG=$(cat ovf_image_tag.txt)
+#     - |
+#       if [ -n "$app_exists" ]; then
+#         echo "Container App 'backend' found. Updating..."
+#         az containerapp update \
+#           --resource-group ovflab \
+#           --name backend \
+#           --min-replicas 1 \
+#           --image $IMAGE_TAG \
+#           --debug
+#       else
+#         echo "Container App 'backend' not found. Creating..."
+#         az containerapp create \
+#           --resource-group ovflab \
+#           --name backend \
+#           --environment ovflab \
+#           --image $IMAGE_TAG \
+#           --min-replicas 1 \
+#           --ingress external \
+#           --target-port 8080
+#       fi
+#     - az containerapp show --name backend --resource-group ovflab --output table
