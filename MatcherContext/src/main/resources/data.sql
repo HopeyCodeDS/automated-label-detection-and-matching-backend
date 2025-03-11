@@ -102,4 +102,9 @@ INSERT INTO products (
           'Perstorp Chemicals', '0180292793', NULL, '2025-02-21', 'Perstorp Chemicals', 210,
           '2EHA24003', '1', 'Available', '2-Ethylhexanoic Acid', 'Approx 228 KG', '2EHA24003',
           'Net: 210 KG', NULL, 'Chemical Drum', 'N/A', 'N/A'
+      ),
+      (
+          'UCB Pharma S.A.', '0180292793', NULL, '2025-02-21', 'Test Customer 1', 1920,
+          '297429', '1', 'Available', 'Keppra DG 500MG 60TAB IT', '51-4766-65', 'CIA04777',
+          'Warehouse temp: 15-25C', NULL, 'Uncontrolled', 'N/A', 'N/A'
       );

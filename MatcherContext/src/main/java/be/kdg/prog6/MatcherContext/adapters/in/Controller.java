@@ -1,7 +1,6 @@
 package be.kdg.prog6.MatcherContext.adapters.in;
-
-import be.kdg.prog6.MatcherContext.core.ProductMatchResult;
 import be.kdg.prog6.MatcherContext.core.ProductMatchingUseCaseImpl;
+import be.kdg.prog6.MatcherContext.domain.ProductMatchResultInfo;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,7 +23,7 @@ public class Controller {
     }
 
     @PostMapping(value = "/extract-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, Object>> extractText(
+    public ResponseEntity<ProductHuMatchDTO> extractText(
             @RequestParam("file") MultipartFile file,
             @RequestParam("orderNumber") String orderNumber
     ) {
@@ -60,27 +59,31 @@ public class Controller {
 
             // Extract OCR text from response
             List<String> extractedText = (List<String>) response.getBody().get("text");
+            String hu= "44465456478";
+
 
             // Find best matching product
-            Optional<ProductMatchResult> matchedProduct = productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber, extractedText);
+            ProductMatchResultInfo matchedProduct = productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber,hu, extractedText);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("ocr_text", extractedText);
-            result.put("order_number", orderNumber);
-
-            if (matchedProduct.isPresent()) {
-                result.put("matched_product", matchedProduct.get().getProduct());
-                result.put("match_score", matchedProduct.get().getMatchScore()); // Include match accuracy
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("ocr_text", extractedText);
+//            result.put("order_number", orderNumber);
+            ProductHuMatchDTO productHuMatchDTO=new ProductHuMatchDTO();
+            if (matchedProduct!=null) {
+//                result.put("matched_product", matchedProduct.get().getMatchDetails().getProduct());
+//                result.put("match_score", matchedProduct.get().getMatchScore()); // Include match accuracy
+                productHuMatchDTO= ProductHuMatchDTO.fromDomain(matchedProduct);
             } else {
-                result.put("matched_product", "No match found");
-                result.put("match_score", 0.0); // No match found
+//                result.put("matched_product", "No match found");
+//                result.put("match_score", 0.0); // No match found
             }
 
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(productHuMatchDTO);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to process OCR: " + e.getMessage()));
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Failed to process OCR: " + e.getMessage());
+            return null;
         }
     }
 
