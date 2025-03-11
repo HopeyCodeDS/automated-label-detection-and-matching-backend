@@ -1,0 +1,74 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+  - docker:20.10-dind
+
+
+build_social:
+  stage: build
+  image: banditgames11.azurecr.io/banditgames-builder:latest
+  allow_failure: true
+  rules:
+    - changes:
+        - social/**
+        - common/**
+  script:
+    - ./gradlew :social:bootBuildImage
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az acr login --name banditgames11
+    - IMAGE_TAG="banditgames11.azurecr.io/social:${CI_COMMIT_SHORT_SHA}"
+    - echo $IMAGE_TAG > social_image_tag.txt
+    - docker tag social:latest $IMAGE_TAG
+    - docker push $IMAGE_TAG
+  artifacts:
+    paths:
+      - social_image_tag.txt
+
+deploy_social:
+  stage: deploy
+  image: banditgames11.azurecr.io/banditgames-deployer:latest
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
+  dependencies:
+    - build_social
+    
+  script:
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az acr login --name banditgames11
+    - az upgrade --yes
+    - az extension add --name containerapp
+    - app_exists=$(az containerapp list --resource-group banditgames11 --query "[?name=='social']" -o tsv)
+    - echo $app_exists
+    - IMAGE_TAG=$(cat social_image_tag.txt)
+    - |
+      if [ -n "$app_exists" ]; then
+        echo "Container App 'social' found. Updating..."
+        az containerapp update \
+          --resource-group banditgames11 \
+          --name social \
+          --min-replicas 1 \
+          --image $IMAGE_TAG \
+          --debug
+      else
+        echo "Container App 'social' not found. Creating..."
+        az containerapp create \
+          --resource-group banditgames11 \
+          --name social \
+          --environment banditgames \
+          --image $IMAGE_TAG \
+          --min-replicas 1 \
+          --ingress external \
+          --target-port 8080
+      fi
+    - az containerapp show --name social --resource-group banditgames11 --output table
