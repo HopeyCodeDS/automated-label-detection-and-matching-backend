@@ -37,27 +37,27 @@ deploy_backend:
     - az acr login --name ovfacr
     - az upgrade --yes
     - az extension add --name containerapp
-    - app_exists=$(az containerapp list --resource-group banditgames11 --query "[?name=='social']" -o tsv)
+    - app_exists=$(az containerapp list --resource-group ovflab --query "[?name=='backend']" -o tsv)
     - echo $app_exists
-    - IMAGE_TAG=$(cat social_image_tag.txt)
+    - IMAGE_TAG=$(cat ovf_image_tag.txt)
     - |
       if [ -n "$app_exists" ]; then
-        echo "Container App 'social' found. Updating..."
+        echo "Container App 'backend' found. Updating..."
         az containerapp update \
-          --resource-group banditgames11 \
-          --name social \
+          --resource-group ovflab \
+          --name backend \
           --min-replicas 1 \
           --image $IMAGE_TAG \
           --debug
       else
-        echo "Container App 'social' not found. Creating..."
+        echo "Container App 'backend' not found. Creating..."
         az containerapp create \
-          --resource-group banditgames11 \
-          --name social \
-          --environment banditgames \
+          --resource-group ovflab \
+          --name backend \
+          --environment ovflab \
           --image $IMAGE_TAG \
           --min-replicas 1 \
           --ingress external \
           --target-port 8080
       fi
-    - az containerapp show --name social --resource-group banditgames11 --output table
+    - az containerapp show --name backend --resource-group ovflab --output table
