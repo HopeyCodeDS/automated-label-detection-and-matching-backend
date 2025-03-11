@@ -18,9 +18,9 @@ build_backend:
     - ./gradlew :MatcherContext:bootBuildImage
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az acr login --name ovfcr
-    - IMAGE_TAG="ovfcr.azurecr.io/social:${CI_COMMIT_SHORT_SHA}"
+    - IMAGE_TAG="ovfcr.azurecr.io/backend:${CI_COMMIT_SHORT_SHA}"
     - echo $IMAGE_TAG > ovf_image_tag.txt
-    - docker tag social:latest $IMAGE_TAG
+    - docker tag ovfcr.azurecr.io/matchercontext:latest $IMAGE_TAG
     - docker push $IMAGE_TAG
   artifacts:
     paths:
