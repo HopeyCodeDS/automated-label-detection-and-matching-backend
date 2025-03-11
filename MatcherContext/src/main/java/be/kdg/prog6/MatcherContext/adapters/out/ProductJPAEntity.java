@@ -29,7 +29,7 @@ public class ProductJPAEntity {
     @Column(name = "quantity_ordered", nullable = false)
     private Integer quantityOrdered;
 
-    @Column(name = "batch")
+    @Column(name = "batch", columnDefinition = "VARCHAR(255)")
     private String batch;
 
     @Column(name = "line", nullable = false)
