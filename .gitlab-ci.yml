@@ -11,7 +11,7 @@ services:
   - docker:20.10-dind
 
 
-build_social:
+build_backend:
   stage: build
   image: banditgames11.azurecr.io/banditgames-builder:latest
   script:
@@ -26,7 +26,7 @@ build_social:
     paths:
       - ovf_image_tag.txt
 
-deploy_social:
+deploy_backend:
   stage: deploy
   image: banditgames11.azurecr.io/banditgames-deployer:latest
   dependencies:
