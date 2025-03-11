@@ -1,14 +1,14 @@
 package be.kdg.prog6.MatcherContext.core;
-
+import be.kdg.prog6.MatcherContext.domain.MatchDetail;
 import be.kdg.prog6.MatcherContext.domain.Product;
+import be.kdg.prog6.MatcherContext.domain.ProductMatchResultInfo;
 import be.kdg.prog6.MatcherContext.ports.in.ProductMatchingUseCase;
 import be.kdg.prog6.MatcherContext.ports.out.ExtractProductsPort;
+import be.kdg.prog6.MatcherContext.ports.out.LinkHuToProductPort;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,109 +17,118 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
     private static final Logger logger = LoggerFactory.getLogger(ProductMatchingUseCaseImpl.class);
 
     private final ExtractProductsPort extractProductsPort;
+    private final LinkHuToProductPort linkHuToProductPort;
     private final LevenshteinDistance levenshtein = new LevenshteinDistance();
 
-    public ProductMatchingUseCaseImpl(ExtractProductsPort extractProductsPort) {
+    public ProductMatchingUseCaseImpl(ExtractProductsPort extractProductsPort, LinkHuToProductPort linkHuToProductPort) {
         this.extractProductsPort = extractProductsPort;
+        this.linkHuToProductPort = linkHuToProductPort;
     }
 
     @Override
-    public Optional<ProductMatchResult> findBestMatchingProduct(String orderNumber, List<String> extractedText) {
-        logger.info("Starting product match for orderNumber: {}", orderNumber);
+    public ProductMatchResultInfo findBestMatchingProduct(String orderNumber, String huNumber, List<String> extractedText) {
+        logger.info("Starting product match for orderNumber: {} and HU: {}", orderNumber, huNumber);
 
-        List<Product> products;
-
-        // If orderNumber is null or empty, extract all products from DB
-        if (orderNumber == null || orderNumber.trim().isEmpty()) {
-            logger.info("Order number is null or empty. Loading all products from database.");
-            products = extractProductsPort.extractAll();
-        } else {
-            products = extractProductsPort.extractByOrderNumber(orderNumber);
-        }
+        List<Product> products = (orderNumber == null || orderNumber.trim().isEmpty())
+                ? extractProductsPort.extractAll()
+                : extractProductsPort.extractByOrderNumber(orderNumber);
 
         if (products.isEmpty()) {
             logger.warn("No products found for orderNumber: {}", orderNumber);
-            return Optional.empty();
+            return null;
         }
 
-        // Normalize extracted text into words and phrases
         List<String> words = extractedText.stream()
                 .map(this::normalizeText)
-                .flatMap(text -> Arrays.stream(text.split("\\s+"))) // Split into individual words
+                .flatMap(text -> Arrays.stream(text.split("\\s+")))
                 .collect(Collectors.toList());
 
         List<String> phrases = extractedText.stream()
                 .map(this::normalizeText)
-                .collect(Collectors.toList()); // Keep as full phrases
+                .collect(Collectors.toList());
 
-        logger.info("Extracted Words (for product codes, batch & order date): {}", words);
-        logger.info("Extracted Phrases (for descriptions, company name & order date): {}", phrases);
+        logger.info("Extracted Words: {}", words);
+        logger.info("Extracted Phrases: {}", phrases);
+
+        // **BONUS LAYER: Exact Match Check**
+        for (Product product : products) {
+            if (words.contains(normalizeText(product.getProductCode()))) {
+                logger.info("Exact match found for Product ID: {}", product.getProductCode());
+
+                // Link HU to full Product entity
+                linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+
+                ProductMatchResultInfo result = new ProductMatchResultInfo();
+                result.InitialiseProductMatchResultDomain(
+                        huNumber,
+                        product.getProductCode(),
+                        product.getDescription1(),
+                        product.getBatch(),
+                        product.getCustomerName(),
+                        product.getDescription1(),
+                        product.getOrderDate() != null ? product.getOrderDate().toString() : "",
+                        words,
+                        phrases,
+                        1.0, // 100% accuracy
+                        true,
+                        Collections.emptyMap() // No need for detailed matching info
+                );
+
+                return result;
+            }
+        }
+
+        logger.info("No exact match found. Proceeding with weighted similarity matching...");
 
         Product bestMatch = null;
         double bestOverallAccuracy = 0;
+        Map<String, MatchDetail> bestMatchDetails = new HashMap<>();
 
         for (Product product : products) {
-            logger.info("Comparing product: {}", product.getProductCode());
-
             double weightedAccuracy = 0;
+            Map<String, MatchDetail> matchDetails = new HashMap<>();
 
-            // Weight factors
-            double productCodeWeight = 0.4;
-            double batchWeight = 0.3;  // Adjusted Batch weight to 0.3
-            double companyWeight = 0.2;
-            double descriptionWeight = 0.1;
-            double orderDateWeight = 0.1;  // Added Order Date weight
+            weightedAccuracy = (compareField(product.getProductCode(), words, matchDetails, "Product Code") * 0.4) +
+                    (compareField(product.getBatch(), words, matchDetails, "Batch") * 0.3) +
+                    (compareField(product.getCustomerName(), phrases, matchDetails, "Customer Name") * 0.2) +
+                    (compareField(product.getDescription1(), phrases, matchDetails, "Description") * 0.1) +
+                    (compareField(product.getOrderDate() != null ? product.getOrderDate().toString() : "", words, matchDetails, "Order Date") * 0.1);
 
-            // Compare Product Code
-            double productCodeAccuracy = compareField(product.getProductCode(), words);
-            weightedAccuracy += productCodeAccuracy * productCodeWeight;
-
-            // Compare Batch
-            double batchAccuracy = compareField(product.getBatch(), words);
-            weightedAccuracy += batchAccuracy * batchWeight;
-
-            // Compare Company Name
-            double companyAccuracy = compareField(product.getCustomerName(), phrases);
-            weightedAccuracy += companyAccuracy * companyWeight;
-
-            // Compare Description
-            double descriptionAccuracy = compareField(product.getDescription1(), phrases);
-            weightedAccuracy += descriptionAccuracy * descriptionWeight;
-
-            // Compare Order Date
-            String orderDateStr = (product.getOrderDate() != null) ? product.getOrderDate().toString() : "";
-            double orderDateAccuracy = compareField(orderDateStr, words);
-            weightedAccuracy += orderDateAccuracy * orderDateWeight;
-
-            logger.info("\nFinal Weighted Accuracy for product {}: {}%\n", product.getProductCode(), String.format("%.2f", weightedAccuracy * 100));
-
-            // Determine the best match
             if (weightedAccuracy > bestOverallAccuracy) {
                 bestOverallAccuracy = weightedAccuracy;
                 bestMatch = product;
+                bestMatchDetails = matchDetails;
             }
         }
 
         if (bestMatch != null) {
-            logger.info("\nBest overall match: {} with accuracy: {}%\n", bestMatch.getProductCode(), String.format("%.2f", bestOverallAccuracy * 100));
-            return Optional.of(new ProductMatchResult(bestMatch, bestOverallAccuracy));
+            ProductMatchResultInfo result = new ProductMatchResultInfo();
+            result.InitialiseProductMatchResultDomain(
+                    huNumber,
+                    bestMatch.getProductCode(),
+                    bestMatch.getDescription1(),
+                    bestMatch.getBatch(),
+                    bestMatch.getCustomerName(),
+                    bestMatch.getDescription1(),
+                    bestMatch.getOrderDate() != null ? bestMatch.getOrderDate().toString() : "",
+                    words,
+                    phrases,
+                    bestOverallAccuracy,
+                    false,
+                    bestMatchDetails
+            );
+            return result;
         } else {
-            logger.warn("\nNo suitable match found.");
-            return Optional.empty();
+            return null;
         }
     }
 
-    /**
-     * Compares a field (Product Code, Batch, Company Name, Description, Order Date) against the extracted words or phrases.
-     * Returns the accuracy percentage.
-     */
-    private double compareField(String field, List<String> extractedList) {
+    private double compareField(String field, List<String> extractedList, Map<String, MatchDetail> matchDetails, String fieldName) {
         if (field == null || extractedList.isEmpty()) return 0;
 
         String normalizedField = normalizeText(field);
         if (normalizedField.isEmpty()) return 0;
 
-        // Filter extracted words/phrases that are at least 50% of the field length
         List<String> validMatches = extractedList.stream()
                 .filter(p -> p.length() >= normalizedField.length() / 2)
                 .collect(Collectors.toList());
@@ -138,23 +147,20 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
         }
 
         double accuracy = 1.0 - (double) minDistance / normalizedField.length();
-        accuracy = Math.max(0, accuracy); // Ensure no negative accuracy
+        accuracy = Math.max(0, accuracy);
 
-        logger.info("\nBest match for field {}: {}\n  → Matched: {}\n  → Distance: {}\n  → Accuracy: {}%",
-                field, normalizedField, bestMatch, minDistance, String.format("%.2f", accuracy * 100));
+        MatchDetail detail = new MatchDetail();
+        detail.InitialiseMatchDetail(bestMatch, minDistance, accuracy);
+        matchDetails.put(fieldName, detail);
 
         return accuracy;
     }
 
-    /**
-     * Normalize text: Removes special characters, replaces them with spaces, and converts to lowercase.
-     */
     private String normalizeText(String input) {
         if (input == null) return "";
 
-        return Normalizer.normalize(input, Normalizer.Form.NFD)
-                .replaceAll("[^a-zA-Z0-9]", " ")  // Replace special characters with spaces
-                .replaceAll("\\s+", " ")         // Ensure multiple spaces are reduced to one
+        return input.replaceAll("[^a-zA-Z0-9]", " ")  // Remove special characters
+                .replaceAll("\\s+", " ")             // Reduce multiple spaces to one
                 .toLowerCase()
                 .trim();
     }
