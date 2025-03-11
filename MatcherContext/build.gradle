@@ -47,3 +47,7 @@ tasks.named('test') {
 tasks.named('bootRun') {
     systemProperty "java.library.path", "C:\\opencv\\nativeLibs"
 }
+
+bootBuildImage {
+    imageName = "ovfcr.azurecr.io/matchercontext:latest"
+}
