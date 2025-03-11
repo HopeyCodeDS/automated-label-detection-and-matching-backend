@@ -14,38 +14,27 @@ services:
 build_social:
   stage: build
   image: banditgames11.azurecr.io/banditgames-builder:latest
-  allow_failure: true
-  rules:
-    - changes:
-        - social/**
-        - common/**
   script:
     - ./gradlew :social:bootBuildImage
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    - az acr login --name banditgames11
-    - IMAGE_TAG="banditgames11.azurecr.io/social:${CI_COMMIT_SHORT_SHA}"
-    - echo $IMAGE_TAG > social_image_tag.txt
+    - az acr login --name ovfcr
+    - IMAGE_TAG="ovfcr.azurecr.io/social:${CI_COMMIT_SHORT_SHA}"
+    - echo $IMAGE_TAG > ovf_image_tag.txt
     - docker tag social:latest $IMAGE_TAG
     - docker push $IMAGE_TAG
   artifacts:
     paths:
-      - social_image_tag.txt
+      - ovf_image_tag.txt
 
 deploy_social:
   stage: deploy
   image: banditgames11.azurecr.io/banditgames-deployer:latest
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: always
-    - if: $CI_PIPELINE_SOURCE == "web"
-      when: manual
   dependencies:
     - build_social
     
   script:
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    - az acr login --name banditgames11
+    - az acr login --name ovfacr
     - az upgrade --yes
     - az extension add --name containerapp
     - app_exists=$(az containerapp list --resource-group banditgames11 --query "[?name=='social']" -o tsv)
