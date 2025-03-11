@@ -15,7 +15,7 @@ build_backend:
   stage: build
   image: ovfcr.azurecr.io/ovfbackend-builder:latest
   script:
-    - ./gradlew :social:bootBuildImage
+    - ./gradlew :MatchmakingContext:bootBuildImage
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az acr login --name ovfcr
     - IMAGE_TAG="ovfcr.azurecr.io/social:${CI_COMMIT_SHORT_SHA}"
