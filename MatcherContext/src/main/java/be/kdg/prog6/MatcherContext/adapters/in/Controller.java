@@ -92,6 +92,8 @@ public class Controller {
 //                result.put("matched_product", "No match found");
 //                result.put("match_score", 0.0); // No match found
             }
+            System.out.println("✅ Sending DTO Response: " + productHuMatchDTO);
+
 
             return ResponseEntity.ok(productHuMatchDTO);
 
