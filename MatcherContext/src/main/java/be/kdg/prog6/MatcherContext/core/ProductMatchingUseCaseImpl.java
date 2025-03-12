@@ -75,6 +75,14 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                         true,
                         Collections.emptyMap() // No need for detailed matching info
                 );
+                if (huNumber.isEmpty()){
+                    logger.info("HU number is missing. No connection was made.");
+                }
+                else {
+                    linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+
+                }
+
 
                 return result;
             }
@@ -119,6 +127,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     false,
                     bestMatchDetails
             );
+            if (huNumber.isEmpty()){
+                logger.info("HU number is missing. No connection was made.");
+            }
+            else {
+                linkHuToProductPort.linkHuToProduct(huNumber, result.getProductId());
+            }
             return result;
         } else {
             return null;
@@ -152,7 +166,7 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
         accuracy = Math.max(0, accuracy);
 
         MatchDetail detail = new MatchDetail();
-        detail.InitialiseMatchDetail(bestMatch, minDistance, accuracy);
+        detail.InitialiseMatchDetail(bestMatch,field, minDistance, accuracy);
         matchDetails.put(fieldName, detail);
 
         return accuracy;
