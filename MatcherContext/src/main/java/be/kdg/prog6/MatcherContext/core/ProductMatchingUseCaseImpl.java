@@ -55,6 +55,11 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
             if (words.contains(normalizeText(product.getProductCode()))) {
                 logger.info("Exact match found for Product ID: {}", product.getProductCode());
 
+                // Link HU to full Product entity
+
+                linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+
+
                 ProductMatchResultInfo result = new ProductMatchResultInfo();
                 result.InitialiseProductMatchResultDomain(
                         huNumber,
