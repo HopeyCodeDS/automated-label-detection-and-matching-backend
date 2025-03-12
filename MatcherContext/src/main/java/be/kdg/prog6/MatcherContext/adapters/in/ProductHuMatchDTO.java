@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class ProductHuMatchDTO {
     private String huNumber;
-    private String productId;
+    private String productCode;
     private String productName;
     private String batch;
     private String customerName;
@@ -18,8 +18,8 @@ public class ProductHuMatchDTO {
         this.huNumber = huNumber;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
     public void setProductName(String productName) {
@@ -66,8 +66,8 @@ public class ProductHuMatchDTO {
         return huNumber;
     }
 
-    public String getProductId() {
-        return productId;
+    public String getProductCode() {
+        return productCode;
     }
 
     public String getProductName() {
@@ -132,17 +132,34 @@ public class ProductHuMatchDTO {
                 domain.getMatchDetails()
         );
     }
+    @Override
+    public String toString() {
+        return "ProductHuMatchDTO{" +
+                "huNumber='" + huNumber + '\'' +
+                ", productCode='" + productCode + '\'' +
+                ", productName='" + productName + '\'' +
+                ", batch='" + batch + '\'' +
+                ", customerName='" + customerName + '\'' +
+                ", description='" + description + '\'' +
+                ", orderDate='" + orderDate + '\'' +
+                ", extractedWords=" + extractedWords +
+                ", extractedPhrases=" + extractedPhrases +
+                ", accuracy=" + accuracy +
+                ", exactMatch=" + exactMatch +
+                ", matchDetails=" + matchDetails +
+                '}';
+    }
 
     public ProductHuMatchDTO() {
     }
 
     public ProductHuMatchDTO(
-            String huNumber, String productId, String productName, String batch,
+            String huNumber, String productCode, String productName, String batch,
             String customerName, String description, String orderDate,
             List<String> extractedWords, List<String> extractedPhrases,
             double accuracy, boolean exactMatch, Map<String, MatchDetail> matchDetails) {
         this.huNumber = huNumber;
-        this.productId = productId;
+        this.productCode = productCode;
         this.productName = productName;
         this.batch = batch;
         this.customerName = customerName;
