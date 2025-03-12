@@ -37,6 +37,7 @@ dependencies {
 
 //    implementation 'ai.djl.opencv:opencv:0.32.0'
     implementation 'org.apache.httpcomponents:httpmime:4.5.13'
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc:11.2.2.jre11'
 }
 
 tasks.named('test') {
@@ -46,4 +47,8 @@ tasks.named('test') {
 
 tasks.named('bootRun') {
     systemProperty "java.library.path", "C:\\opencv\\nativeLibs"
+}
+
+bootBuildImage {
+    imageName = "ovfcr.azurecr.io/matchercontext:latest"
 }
