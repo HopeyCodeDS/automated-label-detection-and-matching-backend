@@ -54,10 +54,10 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
         for (Product product : products) {
             if (words.contains(normalizeText(product.getProductCode()))) {
                 logger.info("Exact match found for Product ID: {}", product.getProductCode());
-
-                // Link HU to full Product entity
-
-                linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+                Map<String, MatchDetail> bestMatchDetails = new HashMap<>();
+                MatchDetail matchDetail= new MatchDetail();
+                matchDetail.InitialiseMatchDetail(product.getProductCode(),product.getProductCode(),0,1.0);
+                bestMatchDetails.put("Product code", matchDetail);
 
 
                 ProductMatchResultInfo result = new ProductMatchResultInfo();
@@ -68,12 +68,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                         product.getBatch(),
                         product.getCustomerName(),
                         product.getDescription1(),
-                        product.getOrderDate() != null ? product.getOrderDate().toString() : "",
+//                        product.getOrderDate() != null ? product.getOrderDate().toString() : "",
                         words,
                         phrases,
                         1.0, // 100% accuracy
                         true,
-                        Collections.emptyMap() // No need for detailed matching info
+                        bestMatchDetails // No need for detailed matching info
                 );
                 if (huNumber.isEmpty()){
                     logger.info("HU number is missing. No connection was made.");
@@ -101,8 +101,8 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
             weightedAccuracy = (compareField(product.getProductCode(), words, matchDetails, "Product Code") * 0.4) +
                     (compareField(product.getBatch(), words, matchDetails, "Batch") * 0.3) +
                     (compareField(product.getCustomerName(), phrases, matchDetails, "Customer Name") * 0.2) +
-                    (compareField(product.getDescription1(), phrases, matchDetails, "Description") * 0.1) +
-                    (compareField(product.getOrderDate() != null ? product.getOrderDate().toString() : "", words, matchDetails, "Order Date") * 0.1);
+                    (compareField(product.getDescription1(), phrases, matchDetails, "Description") * 0.1);
+//                    (compareField(product.getOrderDate() != null ? product.getOrderDate().toString() : "", words, matchDetails, "Order Date") * 0.1);
 
             if (weightedAccuracy > bestOverallAccuracy) {
                 bestOverallAccuracy = weightedAccuracy;
@@ -120,7 +120,7 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     bestMatch.getBatch(),
                     bestMatch.getCustomerName(),
                     bestMatch.getDescription1(),
-                    bestMatch.getOrderDate() != null ? bestMatch.getOrderDate().toString() : "",
+//                    bestMatch.getOrderDate() != null ? bestMatch.getOrderDate().toString() : "",
                     words,
                     phrases,
                     bestOverallAccuracy,

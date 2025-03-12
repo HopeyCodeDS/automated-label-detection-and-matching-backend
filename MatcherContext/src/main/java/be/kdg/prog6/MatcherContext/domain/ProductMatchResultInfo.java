@@ -69,7 +69,7 @@ public class ProductMatchResultInfo {
 
     public void InitialiseProductMatchResultDomain(
             String huNumber, String productId, String productName, String batch,
-            String customerName, String description, String orderDate,
+            String customerName, String description, //String orderDate,
             List<String> extractedWords, List<String> extractedPhrases,
             double accuracy, boolean exactMatch, Map<String, MatchDetail> matchDetails) {
         this.huNumber = huNumber;
