@@ -16,7 +16,7 @@ import java.util.*;
 public class Controller {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ProductMatchingUseCaseImpl productMatchingUseCaseImpl;
-    private final String PYTHON_OCR_API = "http://ocr-api-2025.azurewebsites.net/ocr"; // FastAPI OCR URL
+    private final String PYTHON_OCR_API = "https://ocr-api-2025.azurewebsites.net/ocr"; // FastAPI OCR URL
 //    private final String PYTHON_OCR_API = "http://localhost:8000/ocr"; // FastAPI OCR URL
 
     public Controller(ProductMatchingUseCaseImpl productMatchingUseCaseImpl) {
