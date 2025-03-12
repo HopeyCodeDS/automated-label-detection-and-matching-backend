@@ -16,7 +16,8 @@ import java.util.*;
 public class Controller {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ProductMatchingUseCaseImpl productMatchingUseCaseImpl;
-    private final String PYTHON_OCR_API = "ocr-api-2025.azurewebsites.net"; // FastAPI OCR URL
+//    private final String PYTHON_OCR_API = "ocr-api-2025.azurewebsites.net/ocr"; // FastAPI OCR URL
+    private final String PYTHON_OCR_API = "http://localhost:8000/ocr"; // FastAPI OCR URL
 
     public Controller(ProductMatchingUseCaseImpl productMatchingUseCaseImpl) {
         this.productMatchingUseCaseImpl = productMatchingUseCaseImpl;
@@ -25,8 +26,12 @@ public class Controller {
     @PostMapping(value = "/extract-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductHuMatchDTO> extractText(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("orderNumber") String orderNumber
+            @RequestParam("orderNumber") String orderNumber,
+            @RequestParam(name = "hu", required = false) String hu
     ) {
+
+
+        // Check empty file
         try {
             if (file.isEmpty()) {
                 throw new IllegalArgumentException("Uploaded file is empty");
@@ -34,6 +39,7 @@ public class Controller {
 
             System.out.println("Received file: " + file.getOriginalFilename());
             System.out.println("Received order number: " + orderNumber);
+            System.out.println("Received HU: " + hu);
 
             // Create headers
             HttpHeaders headers = new HttpHeaders();
@@ -57,13 +63,22 @@ public class Controller {
             // Call Python OCR API
             ResponseEntity<Map> response = restTemplate.exchange(PYTHON_OCR_API, HttpMethod.POST, requestEntity, Map.class);
 
+
+            System.out.println("OCR API response status: " + response.getStatusCode());
+            System.out.println("OCR API response body: " + response.getBody());
+
+
             // Extract OCR text from response
             List<String> extractedText = (List<String>) response.getBody().get("text");
-            String hu= "44465456478";
+
+            System.out.println("Extracted text: " + extractedText);
 
 
             // Find best matching product
-            ProductMatchResultInfo matchedProduct = productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber,hu, extractedText);
+            ProductMatchResultInfo matchedProduct =
+                    productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber,hu, extractedText);
+
+            System.out.println("Matched product: " + matchedProduct);
 
 //            Map<String, Object> result = new HashMap<>();
 //            result.put("ocr_text", extractedText);

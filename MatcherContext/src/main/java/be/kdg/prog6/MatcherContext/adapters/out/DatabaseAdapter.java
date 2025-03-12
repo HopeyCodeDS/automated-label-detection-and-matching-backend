@@ -83,7 +83,10 @@ public class DatabaseAdapter implements ExtractProductsPort, LinkHuToProductPort
 
     @Override
     public List<HU> fetchHU(String query) {
-        List<HUJPAEntity> hujpaEntities= hujpaRepository.findByHuNumberContaining(query);
+//        List<HUJPAEntity> hujpaEntities= hujpaRepository.findByHuNumberContaining(query);
+        // Should be all, and we filter in the frontend
+        List<HUJPAEntity> hujpaEntities= hujpaRepository.findAll();
+
         List<HU> hus= new ArrayList<>();
         for (HUJPAEntity hujpaEntity: hujpaEntities){
             HU hu= new HU();

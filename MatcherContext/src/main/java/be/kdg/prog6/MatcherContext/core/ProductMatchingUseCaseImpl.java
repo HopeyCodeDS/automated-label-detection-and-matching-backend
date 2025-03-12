@@ -56,7 +56,9 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                 logger.info("Exact match found for Product ID: {}", product.getProductCode());
 
                 // Link HU to full Product entity
+
                 linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+
 
                 ProductMatchResultInfo result = new ProductMatchResultInfo();
                 result.InitialiseProductMatchResultDomain(
