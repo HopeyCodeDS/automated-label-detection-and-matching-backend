@@ -2,6 +2,7 @@ package be.kdg.prog6.MatcherContext.adapters.out;
 
 import be.kdg.prog6.MatcherContext.domain.HU;
 import be.kdg.prog6.MatcherContext.domain.Product;
+import be.kdg.prog6.MatcherContext.ports.out.BatchInfoPort;
 import be.kdg.prog6.MatcherContext.ports.out.ExtractProductsPort;
 import be.kdg.prog6.MatcherContext.ports.out.FetchHUPort;
 import be.kdg.prog6.MatcherContext.ports.out.LinkHuToProductPort;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class DatabaseAdapter implements ExtractProductsPort, LinkHuToProductPort, FetchHUPort {
+public class DatabaseAdapter implements ExtractProductsPort, LinkHuToProductPort, FetchHUPort, BatchInfoPort {
 
 
     private ProductJPARepository productJPARepository;
@@ -41,22 +42,30 @@ public class DatabaseAdapter implements ExtractProductsPort, LinkHuToProductPort
     }
     @Override
     @Transactional
-    public void linkHuToProduct(String huNumber, String productId) {
+    public void linkHuToProduct(String huNumber, String productId, String batch) {
         try {
             Optional<HUJPAEntity> huOptional = hujpaRepository.findByHuNumber(huNumber);
-            Optional<ProductJPAEntity> productOptional = productJPARepository.findByProductCode(productId);
+            List<ProductJPAEntity> productList = productJPARepository.findByProductCode(productId);
 
-            System.out.println("🔄 Attempting to link HU: " + huNumber + " to Product: " + productId);
+            System.out.println("🔄 Attempting to link HU: " + huNumber + " to Product: " + productId + " with Batch: " + batch);
 
-            if (huOptional.isPresent() && productOptional.isPresent()) {
+            if (huOptional.isPresent() && !productList.isEmpty()) {
                 HUJPAEntity hu = huOptional.get();
-                ProductJPAEntity product = productOptional.get();
 
-                // ✅ Manually set the product and save
-                hu.setProduct(product);
-                hujpaRepository.save(hu);
+                Optional<ProductJPAEntity> matchedProduct = productList.stream()
+                        .filter(product -> batch.equals(product.getBatch())) // Match batch
+                        .findFirst(); // Get the first matching product
 
-                System.out.println("✅ Successfully linked HU: " + huNumber + " to Product: " + product.getProductCode());
+                if (matchedProduct.isPresent()) {
+                    ProductJPAEntity product = matchedProduct.get();
+                    hu.setProduct(product);
+                    hujpaRepository.save(hu);
+
+                    System.out.println("✅ Successfully linked HU: " + huNumber + " to Product: " + product.getProductCode() + " (Batch: " + batch + ")");
+                } else {
+                    System.out.println("❌ No matching product found with batch: " + batch);
+                    throw new IllegalArgumentException("Product not found for given batch.");
+                }
             } else {
                 System.out.println("❌ HU number or Product not found in DB.");
                 throw new IllegalArgumentException("HU number or Product not found in DB.");
@@ -94,5 +103,18 @@ public class DatabaseAdapter implements ExtractProductsPort, LinkHuToProductPort
             hus.add(hu);
         }
         return hus;
+    }
+
+    @Override
+    public List<Product> extractByProductId(String productCode) {
+        List<ProductJPAEntity> productJPAEntities= new ArrayList<>();
+        List<Product> products= new ArrayList<>();
+        productJPAEntities= productJPARepository.findByProductCode(productCode);
+        for (ProductJPAEntity productJPAEntity: productJPAEntities){
+            Product product= new Product();
+            product.initialiseProduct(productJPAEntity.getClient(),productJPAEntity.getOrderNumberEdi(),productJPAEntity.getRefoEdi(),productJPAEntity.getOrderDate(),productJPAEntity.getCustomerName(),productJPAEntity.getQuantityOrdered(),productJPAEntity.getBatch(),productJPAEntity.getLine(),productJPAEntity.getStockInventory(),productJPAEntity.getDescription1(),productJPAEntity.getPackCode(),productJPAEntity.getProductCode(),productJPAEntity.getDescription2(),productJPAEntity.getProductExtension(),productJPAEntity.getDescriptionPackaging(),productJPAEntity.getPalletSize(),productJPAEntity.getSalesCode());
+            products.add(product);
+        }
+        return products;
     }
 }

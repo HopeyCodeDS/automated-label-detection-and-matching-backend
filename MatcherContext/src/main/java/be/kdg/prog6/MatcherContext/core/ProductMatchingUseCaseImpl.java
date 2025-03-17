@@ -3,6 +3,7 @@ import be.kdg.prog6.MatcherContext.domain.MatchDetail;
 import be.kdg.prog6.MatcherContext.domain.Product;
 import be.kdg.prog6.MatcherContext.domain.ProductMatchResultInfo;
 import be.kdg.prog6.MatcherContext.ports.in.ProductMatchingUseCase;
+import be.kdg.prog6.MatcherContext.ports.out.BatchInfoPort;
 import be.kdg.prog6.MatcherContext.ports.out.ExtractProductsPort;
 import be.kdg.prog6.MatcherContext.ports.out.LinkHuToProductPort;
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -17,11 +18,14 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
     private static final Logger logger = LoggerFactory.getLogger(ProductMatchingUseCaseImpl.class);
 
     private final ExtractProductsPort extractProductsPort;
+    private final BatchInfoPort batchInfoPort;
+
     private final LinkHuToProductPort linkHuToProductPort;
     private final LevenshteinDistance levenshtein = new LevenshteinDistance();
 
-    public ProductMatchingUseCaseImpl(ExtractProductsPort extractProductsPort, LinkHuToProductPort linkHuToProductPort) {
+    public ProductMatchingUseCaseImpl(ExtractProductsPort extractProductsPort, BatchInfoPort batchInfoPort, LinkHuToProductPort linkHuToProductPort) {
         this.extractProductsPort = extractProductsPort;
+        this.batchInfoPort = batchInfoPort;
         this.linkHuToProductPort = linkHuToProductPort;
     }
 
@@ -53,38 +57,69 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
         // **BONUS LAYER: Exact Match Check**
         for (Product product : products) {
             if (words.contains(normalizeText(product.getProductCode()))) {
-                logger.info("Exact match found for Product ID: {}", product.getProductCode());
+                logger.info("✅ Exact match found for Product ID: {}", product.getProductCode());
+
+                // 🔹 Get all products with the same product code
+                List<Product> matchedProducts = batchInfoPort.extractByProductId(product.getProductCode());
+
+                if (matchedProducts.isEmpty()) {
+                    logger.warn("❌ No products found for Product ID: {}", product.getProductCode());
+                    return null;
+                }
+
+                Product bestMatch = null;
+                double bestOverallAccuracy = 0;
                 Map<String, MatchDetail> bestMatchDetails = new HashMap<>();
-                MatchDetail matchDetail= new MatchDetail();
-                matchDetail.InitialiseMatchDetail(product.getProductCode(),product.getProductCode(),0,1.0);
-                bestMatchDetails.put("Product code", matchDetail);
 
+                for (Product matchedProduct : matchedProducts) {
+                    Map<String, MatchDetail> fieldMatchDetails = new HashMap<>();
 
-                ProductMatchResultInfo result = new ProductMatchResultInfo();
-                result.InitialiseProductMatchResultDomain(
-                        huNumber,
-                        product.getProductCode(),
-                        product.getDescription1(),
-                        product.getBatch(),
-                        product.getCustomerName(),
-                        product.getDescription1(),
-//                        product.getOrderDate() != null ? product.getOrderDate().toString() : "",
-                        words,
-                        phrases,
-                        1.0, // 100% accuracy
-                        true,
-                        bestMatchDetails // No need for detailed matching info
-                );
-                if (huNumber.isEmpty()){
-                    logger.info("HU number is missing. No connection was made.");
-                }
-                else {
-                    linkHuToProductPort.linkHuToProduct(huNumber, product.getProductCode());
+                    // 🔹 Compare multiple fields and store them for info
+                    double batchAccuracy = compareField(matchedProduct.getBatch(), words, fieldMatchDetails, "Batch");
+                    double customerAccuracy = compareField(matchedProduct.getCustomerName(), phrases, fieldMatchDetails, "Customer Name");
+                    double descriptionAccuracy = compareField(matchedProduct.getDescription1(), phrases, fieldMatchDetails, "Description");
 
+                    // 🔹 Weighted scoring
+                    double weightedAccuracy = (batchAccuracy * 0.4) + (customerAccuracy * 0.3) + (descriptionAccuracy * 0.3);
+
+                    if (weightedAccuracy > bestOverallAccuracy) {
+                        bestOverallAccuracy = weightedAccuracy;
+                        bestMatch = matchedProduct;
+                        bestMatchDetails = fieldMatchDetails;
+                    }
                 }
 
+                if (bestMatch != null) {
+                    logger.info("✅ Best matched batch found: {}", bestMatch.getBatch());
 
-                return result;
+                    // 🔹 Add exact Product Code match detail
+                    MatchDetail matchDetail = new MatchDetail();
+                    matchDetail.InitialiseMatchDetail(bestMatch.getProductCode(), bestMatch.getProductCode(), 0, 1.0);
+                    bestMatchDetails.put("Product Code", matchDetail);
+
+                    ProductMatchResultInfo result = new ProductMatchResultInfo();
+                    result.InitialiseProductMatchResultDomain(
+                            huNumber,
+                            bestMatch.getProductCode(),
+                            bestMatch.getDescription1(),
+                            bestMatch.getBatch(),
+                            bestMatch.getCustomerName(),
+                            bestMatch.getDescription1(),
+                            words,
+                            phrases,
+                            bestOverallAccuracy,
+                            true,
+                            bestMatchDetails
+                    );
+
+//                    if (!huNumber.isEmpty()) {
+//                        linkHuToProductPort.linkHuToProduct(huNumber, bestMatch.getProductCode(), bestMatch.getBatch());
+//                    } else {
+//                        logger.info("HU number is missing. No connection was made.");
+//                    }
+
+                    return result;
+                }
             }
         }
 
@@ -127,12 +162,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     false,
                     bestMatchDetails
             );
-            if (huNumber.isEmpty()){
-                logger.info("HU number is missing. No connection was made.");
-            }
-            else {
-                linkHuToProductPort.linkHuToProduct(huNumber, result.getProductId());
-            }
+//            if (huNumber.isEmpty()){
+//                logger.info("HU number is missing. No connection was made.");
+//            }
+//            else {
+//                linkHuToProductPort.linkHuToProduct(huNumber, result.getProductId(), result.getBatch());
+//            }
             return result;
         } else {
             return null;

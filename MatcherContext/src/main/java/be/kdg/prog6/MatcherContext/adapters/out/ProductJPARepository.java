@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface ProductJPARepository extends JpaRepository<ProductJPAEntity, Long> {
     List<ProductJPAEntity> findByOrderNumberEdi(String orderNumber);
-    Optional<ProductJPAEntity> findByProductCode(String productCode);
+    List<ProductJPAEntity> findByProductCode(String productCode);
+//    List<ProductJPAEntity> findByProductCode(String productCode);
 }

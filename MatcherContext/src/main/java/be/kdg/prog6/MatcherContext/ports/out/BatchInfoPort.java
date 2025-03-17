@@ -6,8 +6,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public interface LinkHuToProductPort {
-    void linkHuToProduct(String huNumber, String productId, String batch);
+public interface BatchInfoPort {
+    List<Product> extractByProductId(String productCode);
 
 
 }
+
