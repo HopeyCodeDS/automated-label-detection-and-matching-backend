@@ -75,12 +75,14 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     Map<String, MatchDetail> fieldMatchDetails = new HashMap<>();
 
                     // 🔹 Compare multiple fields and store them for info
+                    double productCodeAccuracy =1.0;
+
                     double batchAccuracy = compareField(matchedProduct.getBatch(), words, fieldMatchDetails, "Batch");
                     double customerAccuracy = compareField(matchedProduct.getCustomerName(), phrases, fieldMatchDetails, "Customer Name");
                     double descriptionAccuracy = compareField(matchedProduct.getDescription1(), phrases, fieldMatchDetails, "Description");
 
                     // 🔹 Weighted scoring
-                    double weightedAccuracy = (batchAccuracy * 0.4) + (customerAccuracy * 0.3) + (descriptionAccuracy * 0.3);
+                    double weightedAccuracy = (productCodeAccuracy*0.4)+(batchAccuracy * 0.3) + (customerAccuracy * 0.2) + (descriptionAccuracy * 0.1);
 
                     if (weightedAccuracy > bestOverallAccuracy) {
                         bestOverallAccuracy = weightedAccuracy;
