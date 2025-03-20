@@ -1,7 +1,10 @@
 package be.kdg.prog6.MatcherContext.adapters.in;
 import be.kdg.prog6.MatcherContext.ports.in.ProductHULinkUseCase;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+
+@RestController
+@RequestMapping("/api")
 public class HULinkController {
     private final ProductHULinkUseCase productHULinkUseCase;
 
@@ -9,7 +12,9 @@ public class HULinkController {
         this.productHULinkUseCase = productHULinkUseCase;
     }
 
-    @GetMapping("/search")
+
+
+    @PostMapping("/match")
     public void linkHU(  @RequestParam("batch") String batch,
                          @RequestParam("product_id") String product_id ,
                          @RequestParam("hu") String hu ) {
