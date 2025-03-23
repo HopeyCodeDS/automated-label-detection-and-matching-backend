@@ -36,11 +36,6 @@ public class Controller {
             if (file.isEmpty()) {
                 throw new IllegalArgumentException("Uploaded file is empty");
             }
-
-            System.out.println("Received file: " + file.getOriginalFilename());
-            System.out.println("Received order number: " + orderNumber);
-            System.out.println("Received HU: " + hu);
-
             // Create headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -78,19 +73,11 @@ public class Controller {
             ProductMatchResultInfo matchedProduct =
                     productMatchingUseCaseImpl.findBestMatchingProduct(orderNumber,hu, extractedText);
 
-            System.out.println("Matched product: " + matchedProduct);
-
-//            Map<String, Object> result = new HashMap<>();
-//            result.put("ocr_text", extractedText);
-//            result.put("order_number", orderNumber);
             ProductHuMatchDTO productHuMatchDTO=new ProductHuMatchDTO();
             if (matchedProduct!=null) {
-//                result.put("matched_product", matchedProduct.get().getMatchDetails().getProduct());
-//                result.put("match_score", matchedProduct.get().getMatchScore()); // Include match accuracy
                 productHuMatchDTO= ProductHuMatchDTO.fromDomain(matchedProduct);
             } else {
-//                result.put("matched_product", "No match found");
-//                result.put("match_score", 0.0); // No match found
+
             }
             System.out.println("✅ Sending DTO Response: " + productHuMatchDTO);
 
@@ -98,8 +85,6 @@ public class Controller {
             return ResponseEntity.ok(productHuMatchDTO);
 
         } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Failed to process OCR: " + e.getMessage());
             return null;
         }
     }

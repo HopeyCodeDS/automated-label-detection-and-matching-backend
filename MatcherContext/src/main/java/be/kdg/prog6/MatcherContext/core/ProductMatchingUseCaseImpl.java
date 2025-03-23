@@ -59,7 +59,6 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
             if (words.contains(normalizeText(product.getProductCode()))) {
                 logger.info("✅ Exact match found for Product ID: {}", product.getProductCode());
 
-                // 🔹 Get all products with the same product code
                 List<Product> matchedProducts = batchInfoPort.extractByProductId(product.getProductCode());
 
                 if (matchedProducts.isEmpty()) {
@@ -74,14 +73,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                 for (Product matchedProduct : matchedProducts) {
                     Map<String, MatchDetail> fieldMatchDetails = new HashMap<>();
 
-                    // 🔹 Compare multiple fields and store them for info
                     double productCodeAccuracy =1.0;
 
                     double batchAccuracy = compareField(matchedProduct.getBatch(), words, fieldMatchDetails, "Batch");
                     double customerAccuracy = compareField(matchedProduct.getCustomerName(), phrases, fieldMatchDetails, "Customer Name");
                     double descriptionAccuracy = compareField(matchedProduct.getDescription1(), phrases, fieldMatchDetails, "Description");
 
-                    // 🔹 Weighted scoring
                     double weightedAccuracy = (productCodeAccuracy*0.4)+(batchAccuracy * 0.3) + (customerAccuracy * 0.2) + (descriptionAccuracy * 0.1);
 
                     if (weightedAccuracy > bestOverallAccuracy) {
@@ -94,7 +91,6 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                 if (bestMatch != null) {
                     logger.info("✅ Best matched batch found: {}", bestMatch.getBatch());
 
-                    // 🔹 Add exact Product Code match detail
                     MatchDetail matchDetail = new MatchDetail();
                     matchDetail.InitialiseMatchDetail(bestMatch.getProductCode(), bestMatch.getProductCode(), 0, 1.0);
                     bestMatchDetails.put("Product Code", matchDetail);
@@ -113,20 +109,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                             true,
                             bestMatchDetails
                     );
-
-//                    if (!huNumber.isEmpty()) {
-//                        linkHuToProductPort.linkHuToProduct(huNumber, bestMatch.getProductCode(), bestMatch.getBatch());
-//                    } else {
-//                        logger.info("HU number is missing. No connection was made.");
-//                    }
-
                     return result;
                 }
             }
         }
 
         logger.info("No exact match found. Proceeding with weighted similarity matching...");
-
         Product bestMatch = null;
         double bestOverallAccuracy = 0;
         Map<String, MatchDetail> bestMatchDetails = new HashMap<>();
@@ -139,8 +127,6 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     (compareField(product.getBatch(), words, matchDetails, "Batch") * 0.3) +
                     (compareField(product.getCustomerName(), phrases, matchDetails, "Customer Name") * 0.2) +
                     (compareField(product.getDescription1(), phrases, matchDetails, "Description") * 0.1);
-//                    (compareField(product.getOrderDate() != null ? product.getOrderDate().toString() : "", words, matchDetails, "Order Date") * 0.1);
-
             if (weightedAccuracy > bestOverallAccuracy) {
                 bestOverallAccuracy = weightedAccuracy;
                 bestMatch = product;
@@ -157,19 +143,12 @@ public class ProductMatchingUseCaseImpl implements ProductMatchingUseCase {
                     bestMatch.getBatch(),
                     bestMatch.getCustomerName(),
                     bestMatch.getDescription1(),
-//                    bestMatch.getOrderDate() != null ? bestMatch.getOrderDate().toString() : "",
                     words,
                     phrases,
                     bestOverallAccuracy,
                     false,
                     bestMatchDetails
             );
-//            if (huNumber.isEmpty()){
-//                logger.info("HU number is missing. No connection was made.");
-//            }
-//            else {
-//                linkHuToProductPort.linkHuToProduct(huNumber, result.getProductId(), result.getBatch());
-//            }
             return result;
         } else {
             return null;
