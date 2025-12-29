@@ -1,5 +1,17 @@
 # OCR Label Matching Backend – Application Flow
 
+<div align="center">
+  
+![Java](https://img.shields.io/badge/Java-21-blue?logo=java&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-brightgreen?logo=springboot)
+![Gradle](https://img.shields.io/badge/Gradle-7.0-blueviolet?logo=gradle)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-blue?logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)
+![GitLab CI](https://img.shields.io/badge/GitLab%20CI-CD/CI-FF6B35?style=for-the-badge&logo=gitlab&logoColor=white)
+
+</div>
+
 This backend application is built with **Java + Spring Boot** using **Hexagonal Architecture**. It processes uploaded label images, sends them to an external OCR service, extracts text, intelligently matches the result to product data, and optionally links a **Handling Unit (HU)** to the matched product.
 
 ---
